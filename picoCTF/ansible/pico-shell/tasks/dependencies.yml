@@ -1,0 +1,217 @@
+---
+# Playbook that installs the dependencies for the picoCTF-shell server
+
+# static website frontend build dependencies
+- include_role:
+    name: nodejs
+
+- name: Add an apt signing key for yarn
+  apt_key:
+    url: https://dl.yarnpkg.com/debian/pubkey.gpg
+    state: present
+
+- name: Add yarn ppa
+  lineinfile:
+    path: /etc/apt/sources.list.d/yarn.list
+    line: "deb https://dl.yarnpkg.com/debian/ stable main"
+    create: yes
+
+# Extracted from picoCTF-platform/scripts/shell_setup.sh
+- name: Install picoCTF-shell system dependencies
+  apt:
+    state: present
+    update_cache: yes
+    name: [
+      'dpkg-dev',
+      'dpkg',
+      'fakeroot',
+      'gcc-multilib',
+      'iptables-persistent',
+      'libffi-dev',
+      'libssl-dev',
+      'netfilter-persistent',
+      'nfs-common',
+      'nodejs',
+      'php7.2-cli',       # php5 package deprecated
+      'php7.2-sqlite3',   # used to serve challenge binaries
+      'python-pip',       # used for pam module dependencies
+      'python-virtualenv',
+      'python3-pip',      # used for shell_manager dependencies
+      'python3.7-dev',
+      'python3.7-venv',
+      'python3.7',        # from PPA, to cover all likely interpreter directives
+      'python3',          # used by shell_manager
+      'socat',
+      'software-properties-common',
+      'xinetd',
+      ]
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+# Needed by templated challenge types
+- name: Install uwsgi and plugins for shell server
+  apt:
+    name: [
+        'python-flask',
+        'uwsgi-plugin-php',
+        'uwsgi-plugin-python',
+        'uwsgi-plugin-python3',
+        'uwsgi',
+        ]
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Install pam dependencies
+  apt:
+    name: [
+        'libpam-python',
+        'python-setuptools',
+        ]
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Install system python packages updates needed for pam_auth module and Ansible
+  pip:
+    name:
+      - cryptography==3.3.2
+      - requests==2.22.0
+
+- name: Install python packaging in (new) virtualenv
+  pip:
+    name: packaging
+    virtualenv: "{{ virtualenv_dir }}"
+    virtualenv_python: python3.7
+
+- name: Install python appdirs
+  pip:
+    name: appdirs
+    virtualenv: "{{ virtualenv_dir }}"
+
+# Fix https://github.com/picoCTF/picoCTF/issues/150
+- name: Replace /bin/sh with wrapper script to preserve privilege
+  copy:
+    content: |
+      #!/bin/dash -p
+      exec /bin/dash -p "$@"
+    dest: /bin/sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Install common apt packages for CTF shell servers
+  apt:
+    state: present
+    name: [
+      # archive tools
+      'bzip2',
+      'gzip',
+      'tar',
+      'unzip',
+      'zip',
+      # build tools
+      'build-essential',
+      'nasm',
+      'perl',
+      'python',
+      'python3',
+      'ruby',
+      # common command line tools
+      'dos2unix',
+      'gawk',
+      'grep',
+      'jq',
+      'sed',
+      'silversearcher-ag',
+      # editors
+      'bvi',
+      'emacs-nox',
+      'joe',
+      'nano',
+      'tweak',
+      'vim-nox',
+      # forensics tools
+      'foremost',
+      'scalpel',
+      'sleuthkit',
+      'testdisk',
+      'tshark',
+      # networking tools
+      'curl',
+      'netcat-openbsd',
+      'socat',
+      'traceroute',
+      'wget',
+      # terminal multiplexers
+      'screen',
+      'tmux',
+      # z: misc
+      'expect',
+      'pandoc', # for `pip install pwntools`
+      ]
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+#  Per https://bugs.launchpad.net/ubuntu/+source/gdb/+bug/1845494
+- name: Install specific version of gdb
+  apt:
+    state: present
+    force: yes
+    name: 'gdb=8.1-0ubuntu3'
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Hold gdb
+  dpkg_selections:
+    name: gdb
+    selection: hold
+
+- name: Ensure nano is the default editor
+  alternatives:
+    name: editor
+    path: /bin/nano
+
+- name: Install common pip2 packages for CTF shell servers
+  pip:    # ipython 6.0 dropped support for Python2
+    name: [
+        'ipython<6.0',
+        'ptpython',
+        'pwntools',
+        ]
+# pwntools is not ready for python3; skipping to avoid confusion
+
+# Fix "Invalid environment marker: platform_python_implementation != 'PyPy'"
+- name: Upgrade setuptools
+  pip:
+    name: "setuptools"
+    virtualenv: "{{ virtualenv_dir }}"
+    extra_args: "--upgrade"
+
+- name: Ensure wetty directory exists
+  file:
+    path: /opt/wetty/
+    state: directory
+    owner: root
+    group: root
+
+- name: Install wetty
+  npm:
+    name: wetty
+    executable: /usr/bin/npm --unsafe-perm=true
+    production: yes
+    global: no
+    path: /opt/wetty
+    version: "2.0.2"
+
+- name: Install quota
+  apt:
+    state: present
+    name: [
+      'linux-modules-extra-aws',
+      'quota'
+    ]
+  when: enable_disk_quota | default(false) | bool
+  register: quota_install
+  environment:
+    DEBIAN_FRONTEND: noninteractive

@@ -1,0 +1,11 @@
+---
+# Task list to add a user to the web site
+
+- name: "Run add-web-user.py to create user ({{ web_user }})"
+  shell:
+    cmd: >
+      . {{virtualenv_dir}}/bin/activate;
+      {{scripts_dir}}/add-web-user.py
+      -u '{{ web_user }}' -p '{{ web_pw }}' -e '{{ web_email }}'
+  register: result
+  changed_when: '"WARN" not in result.stderr'

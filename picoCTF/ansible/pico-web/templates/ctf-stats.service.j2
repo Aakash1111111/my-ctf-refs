@@ -1,0 +1,12 @@
+[Unit]
+Description=ctf stats cache updater
+After=network.target
+
+[Service]
+Type=oneshot
+{% if mongodb_replica_enabled %}
+Environment="APP_SETTINGS_FILE={{ web_config_dir }}/deploy_settings_stats.py"
+{% else %}
+Environment="APP_SETTINGS_FILE={{ web_config_dir }}/deploy_settings.py"
+{% endif %}
+ExecStart={{ virtualenv_dir }}/bin/python {{ daemon_src_dir }}/cache_stats.py

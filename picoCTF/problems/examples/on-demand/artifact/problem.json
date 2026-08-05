@@ -1,0 +1,12 @@
+{
+  "name": "Buffer Overflow 2",
+  "category": "Binary Exploitation",
+  "description": "Exploit the {{url_for(\"vuln\", display=\"Buffer Overflow\")}}.",
+  "score" : 50,
+  "hints": ["This is the same challenge as Buffer Overflow 1, just implemented in a container.",
+            "Most modern exploitation mitigations (such as DEP and stack-cookies) are disabled",
+            "There is still ASLR, but the program helpfully leaks where your payload lands"],
+  "author": "Roy Ragsdale",
+  "organization": "ACI",
+  "event": "Sample"
+}

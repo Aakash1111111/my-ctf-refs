@@ -1,0 +1,32 @@
+---
+# Playbook that installs and configures picoCTF-shell servers
+
+- include: dependencies.yml
+  tags:
+    - dependency
+
+- include: shell_manager-config.yml
+
+- include: shell_manager.yml
+  tags:
+    - shell-api
+
+- include_role:
+    name: nginx
+    apply:
+      tags:
+        - nginx
+  tags: nginx
+
+- include: pam_and_services.yml
+
+- include: deploy_problems.yml
+  tags:
+    - deploy-all
+
+- include: redeploy_single_challenge.yml
+  tags:
+    - redeploy-one
+  when: slug is defined and problem_dir is defined
+
+- include: permissions.yml

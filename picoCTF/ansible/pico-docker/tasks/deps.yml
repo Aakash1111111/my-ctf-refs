@@ -1,0 +1,13 @@
+---
+
+# install both for future compatibility with ansible python3
+- name: Install pip
+  apt:
+    name: [
+      'python-pip',
+      'python3-pip'
+      ]
+
+- name: Install cryptography (requirement for openssl_csr_module)
+  pip:
+    name: cryptography

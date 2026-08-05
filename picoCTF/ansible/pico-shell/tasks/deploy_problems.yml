@@ -1,0 +1,29 @@
+---
+# Playbook to deploy problems on the shell server
+
+- name: Ensure deb and bundle directories exists
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ deb_dir }}"
+    - "{{ bundle_dir }}"
+
+- name: Install problems
+  command: "{{ virtualenv_dir }}/bin/shell_manager install {{ item }}"
+  with_items: "{{ problem_source_dirs }}"
+
+- name: Deploy problems
+  command: "{{ virtualenv_dir }}/bin/shell_manager deploy -n {{deploy_number}} all"
+
+- name: Install bundles
+  command: "{{ virtualenv_dir }}/bin/shell_manager install-bundle {{ item }}"
+  with_items: "{{ bundles }}"
+  ignore_errors: True
+
+- name: Install any missing dependencies
+  apt:
+    upgrade: full
+    force: yes
+  environment:
+    DEBIAN_FRONTEND: noninteractive

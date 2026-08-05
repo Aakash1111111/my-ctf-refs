@@ -1,0 +1,13 @@
+---
+
+# The vast majority of configuration for this role is passes in by either
+# pico-web or pico-shell when they templat thier configuration. The following
+# are sane defaults.
+
+nginx_server_name : "{{ ansible_host }}"
+
+enable_basic_auth : false
+htpasswd_accounts : []
+
+enable_ssl        : False
+enable_certbot    : False

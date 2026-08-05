@@ -1,0 +1,36 @@
+root = true
+
+#### Indent 2 + space is more trendy these days ################################
+
+[*]
+charset = utf-8
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+tab_width = 8
+trim_trailing_whitespace = true
+
+#### 4 spaces ##################################################################
+
+[*.{cs,py}]
+indent_size = 4
+
+#### Tabs; some editors use indent_size to align ###############################
+
+[{Makefile,.gitconfig}]
+indent_size = 8
+indent_style = tab
+
+[*.{go,s}]
+indent_size = 8
+indent_style = tab
+
+#### Special treatments ########################################################
+
+# LISP and family have a special convention for indentation
+[*.el]
+indent_size = unset
+
+# Markdown uses trailing whitespace to mean mandatory line-break
+[*.md]
+trim_trailing_whitespace = false

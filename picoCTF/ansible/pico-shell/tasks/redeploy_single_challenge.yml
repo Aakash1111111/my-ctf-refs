@@ -1,0 +1,19 @@
+---
+# development convenience to undeploy/redeploy a challenge
+# expects:
+#   slug        (e.g. docker-world-867a1ac)
+#   problem_dir (e.g. /picoCTF/problems/examples/on-demand/minimal/)
+# optional:
+#   deploy_number (defaults to 2)
+
+- name: Undeploy existing problem ({{slug}})
+  command: "shell_manager undeploy -n {{deploy_number}} {{slug}}"
+
+- name: Uninstall existing problem
+  command: "shell_manager uninstall {{slug}}"
+
+- name: Install revised problem ({{problem_dir}})
+  command: "shell_manager install {{problem_dir}}"
+
+- name: Redeploy revised problem
+  command: "shell_manager deploy -n {{deploy_number}} {{slug}}"

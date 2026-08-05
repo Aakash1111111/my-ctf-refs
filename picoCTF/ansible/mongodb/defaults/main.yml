@@ -1,0 +1,60 @@
+---
+# Defaults for the mongodb role. These are the lowest priority variables
+# and can easily be overridden in group_vars, host_vars, or command line.
+# Largely these should be sensible defaults and show not require changing.
+
+db_name           : picoCTF
+db_data_path      : "/data"
+db_internal_ip    : "127.0.0.1"   # bind to localhost by default (e.g. web and db shared)
+redis_internal_ip : "127.0.0.1"   # bind to localhost by default (e.g. web and db shared)
+
+# MongoDB User Variables (used in configure_auth.yml task)
+# Passwords should be stored outside version control or in an
+# ansible-vault protected file.
+initial_admin_name: picoAdmin
+initial_admin_password: "{{ picoAdmin_db_password }}"
+
+# Add additional users an environment specific group_vars file
+mongodb_users: "{{ env_db_users }}"
+
+###
+# MongoDB Configuration Variables (used in configure_mongo.yml task)
+###
+mongodb_user            : mongodb
+mongodb_daemon_name     : mongod
+mongodb_replica_enabled : False
+
+mongodb_apt_keyserver   : hkp://keyserver.ubuntu.com:80
+mongodb_apt_key_id      : 9DA31620334BD75D9DCB49F368818C72E52529D4
+mongodb_repo            : 'deb http://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse'
+
+mongodb_conf_auth       : true                                            # Run with security
+mongodb_conf_bind_ip    : "{{ db_internal_ip }}"                          # IP addresses to listen on
+mongodb_conf_port       : 27017                                           # Port number
+mongodb_conf_journal    : true                                            # Enable journaling
+mongodb_conf_logappend  : true                                            # Append instead of over-writing
+mongodb_conf_logpath    : /var/log/mongodb/{{ mongodb_daemon_name }}.log  # Log to file (not stdout)
+mongodb_conf_dbpath     : "{{ db_data_path }}"                            # Directory for datafiles
+
+
+###
+# Redis Configuration variables
+###
+redis_daemon_name     : redis-server
+redis_conf_auth       : True                           # Run with security
+redis_conf_protected  : "yes"
+redis_conf_bind_ip    : "{{ redis_internal_ip }}"      # IP addresses to listen on
+redis_conf_port       : 6379                           # Port number
+redis_db_number       : 0
+aws_elasticache       : False
+
+###
+# AWS specific mount points (defined in Terraform - static)
+##
+on_aws                : False
+db_data_device        : "/dev/xvdf"
+db_data_device_fstype : "ext4"
+db_data_mount_opts    : "defaults,auto,noatime,noexec"
+
+# For nvme EBS, use db_data_device: "/dev/nvme0n1p1"
+# db_data_mount_opts  : "defaults,auto,noatime,noexec 0 0"

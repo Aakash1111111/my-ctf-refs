@@ -1,0 +1,10 @@
+{
+  "name": "Key Delivery Service",
+  "category": "Miscellaneous",
+  "description": "Passwords are so old school. Keys are the new hotness. Check out our new key delivery service. Shells on-demand!",
+  "score" : 10,
+  "hints": ["There are multiple steps required to get the flag. Investigate both services."],
+  "author": "Roy Ragsdale",
+  "organization": "ACI",
+  "event": "Sample"
+}

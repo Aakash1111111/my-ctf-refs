@@ -1,0 +1,89 @@
+- name: Change /tmp permission
+  become: true
+  file:
+    path: /tmp
+    mode: 01773
+
+- name: Change /etc/xinetd.d permission
+  become: true
+  file:
+    path: /etc/xinetd.d
+    mode: 0750
+
+# generally a good idea (on remote, we will find dist.bundle)
+- name: Exclude group and others from ansible_user home directory
+  file:
+    path: "/home/{{ansible_user}}"
+    mode: "g=,o="
+
+# prevent user listing (some of the users are created for CTF problems)
+- name: Mark /home as not world-readable
+  file:
+    path: "/home"
+    mode: "o-r"
+
+# usually this directory contains a .git (applicable to both local or remote)
+- name: Exclude group and others from pico_base_dir
+  file:
+    path: "{{ pico_base_dir }}"
+    mode: 0700
+
+- name: Restrict readability of /var/log
+  file:
+    path: /var/log
+    mode: "o-r"
+    recurse: yes
+
+- name: Restrict readability of /var/crash
+  file:
+    path: /var/crash
+    mode: "o-r"
+    recurse: yes
+
+- name: Restrict readability of /var/lib/dpkg/info
+  file:
+    path: /var/lib/dpkg/info
+    mode: "o-r"
+    recurse: yes
+
+- name: Restrict readability of /opt/hacksports
+  file:
+    path: /opt/hacksports
+    mode: "o-r"
+    recurse: yes
+
+# also adding here to update permissions if you have already created this folder.
+- name: Restrict readability of /usr/share/nginx/html/static
+  file:
+    path: /usr/share/nginx/html/static
+    mode: 0751
+    recurse: no
+
+- name: Hidepid
+  command: mount -o remount,hidepid=2 /proc
+
+- name: Hidepid persistence
+  command: echo "proc   /proc   proc  defaults,hidepid=2  0   0"  >> /etc/fstab
+
+- name: Copy over 99-motd
+  copy:
+    src: 99-motd
+    dest: /etc/update-motd.d/99-motd
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Disable inter-user messages by default
+  lineinfile:
+    path: /etc/profile
+    line: mesg n
+
+- name: Remove /var/log/wtmp
+  file:
+    path: /var/log/wtmp
+    state: absent
+
+- name: Restrict /var/run/utmp
+  file:
+    path: /var/run/utmp
+    mode: go-r

@@ -1,0 +1,13 @@
+---
+# Task list to intitialize a competition by adding a global scorebaords and
+# optionally starting the event
+
+- name: Auto Initialize CTF
+  shell:
+    cmd: >
+      . {{virtualenv_dir}}/bin/activate;
+      {{ scripts_dir }}/init-ctf.py
+      -g '{{ global_scoreboard }}'
+      {% if auto_start_ctf %} --start {% endif %}
+  register: result
+  changed_when: '"Added scoreboard" in result.stdout or "Started CTF" in result.stdout'

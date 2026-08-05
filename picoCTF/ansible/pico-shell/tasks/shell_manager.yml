@@ -1,0 +1,9 @@
+---
+# Playbook that installs and configures the picoCTF shell_manager from source
+
+# Source was synced in common
+- name: Install picoCTF-shell-manager from source
+  pip:
+    name: "file://{{ shell_manager_dir }}"
+    virtualenv: "{{ virtualenv_dir }}"
+    extra_args: "--upgrade"

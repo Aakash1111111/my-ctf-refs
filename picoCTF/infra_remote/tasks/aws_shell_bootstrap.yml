@@ -1,0 +1,11 @@
+---
+
+# A collection of tasks that are suitable to bootstrap a shell host in a remote
+# AWS environment.
+
+# 1. Add key as authorized on shell server
+- name: "Set web SSH key as authorized on shell"
+  authorized_key:
+    user: "{{ ansible_user }}"
+    state: present
+    key: "{{ lookup('file', './fetched/keys/web_id_rsa.pub') }}"

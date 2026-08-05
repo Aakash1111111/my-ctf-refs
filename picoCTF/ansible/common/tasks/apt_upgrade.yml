@@ -1,0 +1,10 @@
+---
+# Playbook that does a general system wide upgrade
+
+- include: apt_update.yml
+
+- name: Run apt-get dist-upgrade
+  apt:
+    upgrade: dist
+  environment:
+    DEBIAN_FRONTEND: noninteractive

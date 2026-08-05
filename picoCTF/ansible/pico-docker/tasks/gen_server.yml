@@ -1,0 +1,96 @@
+---
+# create local CA and keys for docker TLS
+
+- name: Ensure keydir exists
+  file:
+    path: "{{key_dir}}"
+    state: directory
+
+- name: Create CA private key
+  openssl_privatekey:
+    path: "{{ca_key}}"
+  register: cakey
+
+- stat:
+    path: "{{ca_csr}}"
+  register: check
+
+- name: Create CSR for CA
+  openssl_csr:
+    path: "{{ca_csr}}"
+    privatekey_path: "{{ca_key}}"
+    common_name: "local docker CA"
+    basic_constraints: "CA:TRUE"
+    basic_constraints_critical: yes
+    key_usage:
+      - keyCertSign
+      - cRLSign
+      - digitalSignature
+  when: cakey.changed or not check.stat.exists
+
+- stat:
+    path: "{{ca_crt}}"
+  register: check
+
+- name: Create CA certificate
+  openssl_certificate:
+    path: "{{ca_crt}}"
+    privatekey_path: "{{ca_key}}"
+    csr_path: "{{ca_csr}}"
+    provider: selfsigned
+  when: cakey.changed or not check.stat.exists
+
+- name: Create server private key
+  openssl_privatekey:
+    path: "{{srv_key}}"
+  register: serverkey
+
+- stat:
+    path: "{{srv_csr}}"
+  register: check
+
+- name: Create CSR for server
+  openssl_csr:
+    path: "{{srv_csr}}"
+    privatekey_path: "{{srv_key}}"
+    common_name: "{{server_CN}}"
+    subject_alt_name: "{{server_SAN}}"
+    extended_key_usage:
+      - serverAuth
+  when: serverkey.changed or not check.stat.exists
+
+- stat:
+    path: "{{srv_crt}}"
+  register: check
+
+- name: Create Server certificate
+  openssl_certificate:
+    path: "{{srv_crt}}"
+    privatekey_path: "{{srv_key}}"
+    csr_path: "{{srv_csr}}"
+    ownca_path: "{{ca_crt}}"
+    ownca_privatekey_path: "{{ca_key}}"
+    provider: ownca
+  when: serverkey.changed or not check.stat.exists
+
+- name: Set permissions on keys
+  file:
+    path: "{{item}}"
+    mode: 0400
+  with_items:
+    - "{{ca_key}}"
+    - "{{srv_key}}"
+
+- name: Set permissions on certs
+  file:
+    path: "{{item}}"
+    mode: 0444
+  with_items:
+    - "{{ca_crt}}"
+    - "{{srv_crt}}"
+
+- name: Fetch docker CA certificate
+  fetch:
+    src: "{{ca_crt}}"
+    dest: "fetched/certs/ca.pem"
+    flat: yes

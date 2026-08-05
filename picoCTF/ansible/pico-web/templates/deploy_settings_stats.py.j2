@@ -1,0 +1,41 @@
+
+MONGO_DB_NAME = "{{ db_name }}"
+MONGO_ADDR = "{{ db_internal_ip }}"
+MONGO_PORT = "{{ mongodb_conf_port }}"
+
+{% if  mongodb_conf_auth %}
+MONGO_USER = "{{ mongodb_web_user }}"
+MONGO_PW = "{{ picoWeb_db_password }}"
+{% endif %}
+
+{% if mongodb_replica_enabled %}
+MONGO_REPLICA_SETTINGS = "replicaSet=rs0&readPreference=secondary"
+{% endif %}
+
+{% if mongodb_tls_enabled %}
+MONGO_TLS_SETTINGS = "tls=true&tlsCAFile=/etc/ssl/certs/mongodb_tls.pem"
+{% endif %}
+
+REDIS_DB_NUMBER = "{{ redis_db_number }}"
+REDIS_ADDR = "{{ redis_internal_ip | default(db_internal_ip) }}"
+REDIS_PORT = "{{ redis_conf_port }}"
+
+{% if  redis_conf_auth | bool %}
+REDIS_PW = "{{ redis_db_password | default(picoWeb_db_password) }}"
+{% endif %}
+
+SERVER_NAME = "{{ flask_server_name }}"
+
+RATE_LIMIT_BYPASS_KEY = "{{ flask_app_rate_limit_bypass_key }}"
+SECRET_KEY = "{{ flask_app_secret_key }}"
+SESSION_COOKIE_DOMAIN = {{ flask_app_cookie_domain }}
+SESSION_COOKIE_PATH = "{{ flask_app_cookie_path }}"
+SESSION_COOKIE_NAME = "{{ flask_app_cookie_name }}"
+
+DOCKER_PUB    = "{{ docker_public_host }}"
+DOCKER_HOST   = "{{ docker_internal_host }}"
+DOCKER_CA     = "{{ docker_ca }}"
+DOCKER_CLIENT = "{{ docker_client }}"
+DOCKER_KEY    = "{{ docker_key }}"
+DOCKER_TTL    = "{{ docker_ttl }}"
+DOCKER_CONTAINERS_PER_TEAM = {{ docker_containers_per_team }}

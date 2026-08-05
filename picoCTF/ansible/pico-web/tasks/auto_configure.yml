@@ -1,0 +1,24 @@
+---
+# Playbook to handle convenience pre-configurations so an admin is not required
+# to set things up in the web UI by hand. Does not attempt to configure all
+# aspects, simply those required to get a no-interaction development
+# environment.
+
+# Run before adding any users so we don't have to recalculate eligibility
+- include: auto_init_ctf.yml
+
+- include: auto_add_web_user.yml
+  vars:
+    web_user  : "{{ web_admin }}"
+    web_pw    : "{{ web_admin_pw }}"
+    web_email : "{{ admin_email }}"
+  when: auto_add_web_admin
+
+- include: auto_add_shell.yml
+  when: auto_add_shell
+
+# allow triggering after a dev challenge redeploy
+- include: auto_load_deployment.yml
+  when: auto_load_problems or (slug is defined and problem_dir is defined)
+  tags:
+    - redeploy-one

@@ -1,0 +1,11 @@
+---
+
+# This is a convenience task to consistently allow a host to be provisioned
+# with authorized ssh keys
+
+- name: Set up authorized keys
+  authorized_key:
+    user: "{{ admin_user }}"
+    state: present
+    key: "{{ item }}"
+  with_file: "{{ admin_keys }}"

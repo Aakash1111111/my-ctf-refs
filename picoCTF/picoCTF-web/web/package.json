@@ -1,0 +1,15 @@
+{
+  "name": "picoctf-web",
+  "version": "1.0.0",
+  "description": "picoCTF client pages, converted from CJSX",
+  "dependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/cli": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0"
+  },
+  "scripts": {
+    "jsx": "npx babel jsx -d js"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,35 @@
+---
+
+# A collection of tasks that are suitable to bootstrap a web host in a vagrant
+# environment. Performs the following key functions (many of which require that
+# the shell server has been properly provisioned first):
+#
+# 1. Adds a pre-generated SSH key that is authorized on the shell server
+# 2. Adds any user requested administrative keys
+# 3. Configures docker client certificates
+
+
+# 1. This key is generated in the vagrant_shell_bootstrap.yml playbook and is
+# necessary to allow the web server to SSH to the shell server in order to
+# "load deployment" and fetch the deployed challenges.
+- name: Copy pre-generated SSH key for web user to home directory
+  copy:
+    src: "{{ pico_base_dir}}/{{ playbook_dir | basename }}/fetched/keys/{{ ansible_host }}"
+    dest: "{{ web_ssh_key }}"
+    remote_src: yes
+
+# 2. Adds and keys specified in the admin_keys variable to the host.
+- import_role:
+    name: common
+    tasks_from: util_admin_ssh_keys
+  vars:
+    admin_user: "{{ ansible_user }}"
+
+# 3. This configures a docker client certificate that was generated in the
+# pico-docker role run during the provisioning of the shell server.
+- import_role:
+    name: pico-docker
+    tasks_from: config_user
+  vars:
+    client: "{{ ansible_host }}"
+  when: enable_docker

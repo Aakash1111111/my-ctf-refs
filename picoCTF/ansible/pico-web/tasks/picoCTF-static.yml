@@ -1,0 +1,12 @@
+---
+# Playbook that installs and configures the picoCTF API/webapp
+
+- name: Compile JSX -> JS with babel
+  command: "babel {{ pico_web_jsx_in_path }} -d {{ pico_web_js_out_path }}
+   --presets=@babel/preset-env,@babel/preset-react"
+  args:
+    chdir: "/usr/lib"
+
+- name: Run Jekyll to rebuild new web
+  shell: "cd {{ pico_web_api_dir }}/web && jekyll build"
+  become: yes

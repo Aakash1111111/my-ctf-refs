@@ -1,0 +1,36 @@
+---
+# Playbook to deploy the entire picoCTF environment
+#
+# You should not need to edit this file.
+#
+# Notice that there are very few changes from infra_local/site.yml. Simply:
+# 1. The inclusion of the vault.yml vars_file for sensitive variables.
+# 2. Different AWS specific bootstrap tasks.
+# 3. The addition of a certbot role for automatically obtaining SSL/TLS
+# certificates from Let's Encrypt if your configuration is using domain names.
+
+- hosts: shell
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "vault.yml"
+  pre_tasks:
+    - import_tasks: "./tasks/aws_shell_bootstrap.yml"
+  roles:
+    - {role: common     , tags: ["common"]}
+    - {role: pico-docker, tags: ["docker"]  , when: enable_docker}
+    - {role: certbot    , tags: ["certbot"] , when: enable_certbot}
+    - {role: pico-shell , tags: ["shell"]}
+
+- hosts: web
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "vault.yml"
+  pre_tasks:
+    - import_tasks: "./tasks/aws_web_bootstrap.yml"
+  roles:
+    - {role: common     , tags: ["common"]}
+    - {role: mongodb    , tags: ["db"]}
+    - {role: certbot    , tags: ["certbot"], when: enable_certbot}
+    - {role: pico-web   , tags: ["web"]}

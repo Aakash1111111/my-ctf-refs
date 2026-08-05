@@ -1,0 +1,67 @@
+---
+# Defaults for the picoCTF-web role. These are the lowest priority variables
+# and can easily be overridden in group_vars, host_vars, or the command line.
+
+pico_base_dir     : "/picoCTF"
+shell_manager_dir :  "{{pico_base_dir}}/picoCTF-shell"
+virtualenv_dir    : "/picoCTF-env"
+
+###
+# wetty configuration
+###
+wetty_js_path     : "/opt/wetty/node_modules/wetty/build/main.js"
+
+# configure nginx
+site_config_name  : "shell"
+wetty_port        : "4242"
+wetty_server_path : "http://127.0.0.1:{{ wetty_port }}/"
+
+# problem settings
+deb_dir           : "/picoCTF-debs"
+bundle_dir        : "/picoCTF-bundles"
+deploy_number     : 2
+
+# pam module settings
+web_address_internal       : "http://{{ hostvars['web']['ansible_host'] }}"
+web_address_internal_https : "https://{{ hostvars['web']['ansible_host'] }}"
+
+##
+# Problem Settings
+# These will only be used if `problem_source_dirs` and `bundles` are not
+# specified in an environmental configuration AND `auto_load_problems` is True
+##
+problem_source_dirs: "{% if enable_docker %}{{ std_src_dirs + docker_src_dirs }}{% else %}{{std_src_dirs}}{% endif %}"
+std_src_dirs:
+  - "{{ pico_base_dir }}/problems/examples/binary-exploitation/buffer-overflow-1"
+  - "{{ pico_base_dir }}/problems/examples/cryptography/ecb-1"
+  - "{{ pico_base_dir }}/problems/examples/web-exploitation/sql-injection-1"
+docker_src_dirs:
+  - "{{ pico_base_dir }}/problems/examples/on-demand"
+
+
+bundles: "{% if enable_docker %}{{ std_bundles + docker_bundles }}{% else %}{{std_bundles}}{% endif %}"
+std_bundles:
+  - "{{ pico_base_dir }}/problems/bundles/challenge-sampler.json"
+docker_bundles:
+  - "{{ pico_base_dir }}/problems/bundles/on-demand.json"
+
+
+# SSL with Let's Encrypt
+enable_certbot  : False
+
+# SSL with out-of-band cert and vault-encrypted key
+enable_shell_ssl : False
+enable_ssl       : "{{ enable_shell_ssl }}"
+ssl_crt          : "ssl-pico.chained.crt"
+ssl_key          : "ssl-pico.key"
+ssl_key_vault    : "{{ ssl_key }}.vault_encrypted"
+
+enable_shell_proxy: True
+
+# Docker challenge support (disabled by default)
+enable_docker               : False
+docker_internal_host        : "tcp://{{ hostvars['shell']['ansible_host'] }}:2376"
+docker_ca                   : "/home/{{ansible_user}}/.docker/ca.pem"
+docker_client               : "/home/{{ansible_user}}/.docker/cert.pem"
+docker_key                  : "/home/{{ansible_user}}/.docker/key.pem"
+docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600

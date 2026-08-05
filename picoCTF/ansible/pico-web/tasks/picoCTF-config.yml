@@ -1,0 +1,43 @@
+---
+
+- name: Ensure admin user owns pico web config dir
+  file:
+    path: "{{ web_config_dir }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: directory
+
+- name: Template deployment settings
+  template:
+    src: deploy_settings.py.j2
+    dest: "{{ web_config_dir }}/deploy_settings.py"
+    backup: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  no_log: True
+
+- name: Template deployment settings for replica-reading ctf-stats
+  template:
+    src: deploy_settings_stats.py.j2
+    dest: "{{ web_config_dir }}/deploy_settings_stats.py"
+    backup: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  no_log: True
+  when: mongodb_replica_enabled | bool
+
+- name: Copy mongodb public cert if TLS enabled
+  copy:
+    src: mongodb_tls.pem
+    dest: /etc/ssl/certs/mongodb_tls.pem
+    owner: root
+    group: root
+    mode: 0644
+  when: mongodb_tls_enabled | bool
+
+- name: Ensure admin user owns pico http dir
+  file:
+    path: "{{ pico_http_dir }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: directory

@@ -1,0 +1,25 @@
+---
+# Task to configure a cron job that prunes containers that have expired.
+
+- name: "Copy the container_prune.py script to the docker host"
+  copy:
+    src: "container_prune.py"
+    dest: "/home/{{ ansible_user }}/container_prune.py"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0744'
+
+- name: "Ensure {{ ansible_user }} can use crontab"
+  lineinfile:
+    path: /etc/cron.allow
+    regexp: '^{{ ansible_user }}'
+    line: "{{ ansible_user }}"
+    create: yes
+
+- name: "Ensure containers are pruned"
+  become: yes
+  become_user: "{{ ansible_user }}"
+  cron:
+    name: "prune containers"
+    minute: "*"
+    job: "CONTAINER_TTL={{docker_ttl}} ~/container_prune.py > ~/container.log"

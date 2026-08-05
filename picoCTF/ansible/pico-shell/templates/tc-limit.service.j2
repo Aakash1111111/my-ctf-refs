@@ -1,0 +1,14 @@
+[Unit]
+Description=Add TC rules to limit up/down bandwidth
+DefaultDependencies=no
+After=sysinit.target local-fs.target
+Before=basic.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/tc qdisc add dev {{ ansible_default_ipv4.interface }} handle 1: root htb default 11
+ExecStart=/sbin/tc class add dev {{ ansible_default_ipv4.interface }} parent 1: classid 1:1 htb rate 25gbit
+ExecStart=/sbin/tc class add dev {{ ansible_default_ipv4.interface }} parent 1:1 classid 1:11 htb rate {{ net_outbound_limit | default('40mbit') }}
+
+[Install]
+WantedBy=basic.target

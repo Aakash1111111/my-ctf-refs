@@ -1,0 +1,119 @@
+---
+layout: default
+title: Scoreboards
+post_scripts:
+ - js/progression_graphs.js
+ - js/scoreboard.js
+ - js/libs/Chart.min.js
+ - js/libs/bootstrap-paginator.min.js
+startup_functions:
+---
+
+<script type="text/template" id="scoreboard-teamscore-template">
+  <div class="pull-right">
+    <h3>Score: <strong><%= teamscore%></strong></h3>
+  </div>
+</script>
+
+<script type="text/template" id="scoreboard-tabs-template">
+  <ul class="nav nav-tabs" id="scoreboard-tabs">
+    <% _.each(eligibleScoreboards, function(scoreboard, index) { %>
+      <li data-sid="<%= scoreboard.sid %>"><a data-toggle="tab" href="#<%= scoreboard.sid %>"><%- scoreboard.name %></a></li>
+    <% }); %>
+    <% _.each(teamGroups, function(group, index) { %>
+      <li data-gid="<%= group.gid %>"><a data-toggle="tab" href="#<%= group.gid %>"><%- group.name %></a></li>
+    <% }); %>
+  </ul>
+  <div class="tab-content">
+    <h4 class="text-center">Top Teams Progression</h4>
+      <div class="row">
+        <div class="progression-graph"></div>
+      </div>
+  </div>
+  <form class="navbar-form text-center" role="search">
+    <div class="input-group scoreboard-search-group pull-right">
+      <input class="form-control" placeholder="Search (case-sensitive)" name="search" id="search" type="text" size=30>
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+      </span>
+    </div>
+  </form>
+</script>
+
+<script type="text/template" id="scoreboard-template">
+  <div class="row">
+    <div class="col-xs-12">
+      <% if (scoreboard_name !== null) { %>
+        <h3><%= scoreboard_name %></h3>
+      <% } %>
+    </div>
+  </div>
+  <% if(!($.isEmptyObject(scorepage)) && scorepage.length > 0) { %>
+    <% if (total_pages > 1) { %>
+      <div class="pagination-container">
+        <ul id="pagination" class="pagination"></ul>
+      </div>
+    <% } %>
+    <table class="table scoreboard-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>User/Team Name</th>
+          <th>School/Organization</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% _.each(scorepage, function(team, i) { %>
+            <% if(team.tid == user_tid) { %>
+            <tr class="alert alert-success">
+            <% } else { %>
+            <tr>
+            <% } %>
+            <td><%= (50*(current_page - 1)) + i + 1 %>.</td>
+            <td><%- team.name %></td>
+            <td><%- team.affiliation %></td>
+            <td><strong><%= team.score %></strong></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <pre class="text-center">
+      No matching scoreboard entries.
+    </pre>
+  <% } %>
+  <div class="scoreboard-bottom text-center">
+  <% if (scoreboard_logo !== null) { %>
+    <img src="<%= scoreboard_logo %> " class="scoreboard-logo"/>
+  <% } %>
+  <% if (scoreboard_sponsor !== null) { %>
+    <h5>Sponsored by <%= scoreboard_sponsor %></h5>
+  <% } %>
+  </div>
+</script>
+
+<script type="text/template" id="scoreboard-page-template">
+  <% _.each(scorepage, function(team, i) { %>
+    <% if(team.tid == user_tid) { %>
+    <tr class="alert alert-success">
+    <% } else { %>
+    <tr>
+    <% } %>
+      <% if('rank' in team) { %>
+      <td><%- team.rank %>.</td>
+      <% } else { %>
+      <td><%= (50*(current_page - 1)) + i + 1 %>.</td>
+      <% } %>
+      <td><%- team.name %></td>
+      <td><%- team.affiliation %></td>
+      <td><strong><%= team.score %></strong></td>
+    </tr>
+  <% }); %>
+</script>
+
+<div class="container">
+  <div id="scoreboard-teamscore"></div>
+  <div id="scoreboard-tabs"></div>
+  <div id="scoreboard-container"></div>
+</div>

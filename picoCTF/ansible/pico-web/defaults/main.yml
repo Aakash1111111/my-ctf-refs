@@ -1,0 +1,110 @@
+---
+# Defaults for the picoCTF-web role. These are the lowest priority variables
+# and can easily be overridden in group_vars, host_vars, or command line
+
+pico_base_dir  : "/picoCTF"
+web_code_dir   : "{{pico_base_dir}}/picoCTF-web"
+scripts_dir    : "{{pico_base_dir}}/scripts"
+virtualenv_dir : "/picoCTF-env"
+
+###
+# picoCTF-web and API configuration
+###
+web_build_dir        : "/picoCTF-web-build"
+web_config_dir       : "/picoCTF-web-config"
+pico_web_api_dir     : "{{ web_code_dir }}"
+pico_web_js_out_path : "{{ pico_web_api_dir}}/web/js/"
+pico_web_jsx_in_path : "{{ pico_web_api_dir}}/web/jsx/"
+pico_web_backup_dir  : "/backup"
+
+###
+# Gunicorn configuration
+##
+gunicorn_user: "{{ ansible_user }}"
+gunicorn_group: "{{ ansible_user }}"
+gunicorn_working_dir: "{{ pico_web_api_dir }}"
+gunicorn_listen_on: "127.0.0.1:8000"
+num_workers: "{{ ansible_processor_vcpus * 2 + 1 | default(2) }}"
+
+###
+# flask configuration
+###
+
+flask_app_cookie_domain         : None
+flask_app_cookie_path           : "/"
+flask_app_cookie_name           : "flask"
+flask_server_name               : "{% if host_type == 'IP' %}localhost{% else %}{{ ansible_host }}{% endif %}"
+# commented out so they must be explicitly provided
+# flask_app_secret_key            : "INSECURE_DEFAULT_CHANGE_ME"
+# flask_app_rate_limit_bypass_key : "INSECURE_DEFAULT_CHANGE_ME"
+
+###
+# Nginx configuration
+###
+pico_http_dir       : "/srv/http/ctf"
+pico_api_proxy_pass : "http://{{ gunicorn_listen_on }}"
+site_config_name    : "ctf"
+
+# http access and remote specific
+pico_internal_allow : "10.0.1.0/24"
+
+# ctf daemon_manager
+daemon_src_dir      : "{{ pico_web_api_dir}}/daemons"
+
+# Auto Configure event
+auto_start_ctf      : True
+global_scoreboard   : "Global"
+
+# Default Web Admin
+auto_add_web_admin  : False
+web_admin           : "ctfadmin"
+web_ssh_key         : "/home/{{ ansible_user}}/.ssh/id_rsa"
+# commented out so they must be explicitly provided
+#web_admin_pw       : "dev"
+#admin_email        : "admin@example.com"
+
+# Default Shell Server
+auto_add_shell      : False
+auto_load_problems  : False
+shell_name          : "shell"
+shell_host          : "{{ hostvars['shell']['ansible_host'] }}"
+shell_user          : "{{ ansible_user }}"
+shell_keypath       : "{{ web_ssh_key }}"
+shell_proto         : "{% if enable_certbot %}HTTPS{% else %}HTTP{% endif %}"
+
+# HTTP Basic Auth
+enable_basic_auth: false
+htpasswd_accounts: []
+
+# SSL with Let's Encrypt
+enable_certbot  : False
+certbot_staging : False
+
+# SSL with out-of-band cert and vault-encrypted key
+enable_web_ssl : False
+enable_ssl     : "{{ enable_web_ssl }}"
+ssl_crt        : "ssl-pico.chained.crt"
+ssl_key        : "ssl-pico.key"
+ssl_key_vault  : "{{ ssl_key }}.vault_encrypted"
+
+# mongodb connect settings (ensure defaults match mongodb role)
+db_name                 : "picoCTF"
+db_internal_ip          : "127.0.0.1"
+mongodb_conf_port       : 27017
+mongodb_replica_enabled : False
+mongodb_tls_enabled     : False
+mongodb_web_user        : "picoWeb"
+
+redis_internal_ip       : "127.0.0.1"
+redis_conf_port         : 6379
+redis_db_number         : 0
+
+# Docker challenge support (disabled by default)
+enable_docker               : False
+docker_public_host          : "{{ hostvars['shell']['ansible_host'] }}"   # will be the templated value in challenges
+docker_internal_host        : "tcp://{{ hostvars['shell']['ansible_host'] }}:2376"
+docker_containers_per_team  : 3
+docker_ttl                  : 3600  # 1 hour = 60 * 60 = 3600
+docker_ca                   : "/home/{{ansible_user}}/.docker/ca.pem"     # from pico-docker/tasks/config_user.yml
+docker_client               : "/home/{{ansible_user}}/.docker/cert.pem"   # genereted in gen_client.yml
+docker_key                  : "/home/{{ansible_user}}/.docker/key.pem"

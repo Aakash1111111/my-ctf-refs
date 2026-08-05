@@ -1,0 +1,204 @@
+---
+# Playbook that installs and configures services on the shell_server
+
+# Extracted from picoCTF-platform/scripts/shell_setup.sh
+- name: Create wetty user
+  user:
+    name: "wetty"
+    password: '!'
+
+- name: Create wetty user's SSH directory
+  file:
+    path: /home/wetty/.ssh
+    state: directory
+    owner: wetty
+    group: wetty
+
+- name: Copy wetty user's SSH config
+  copy:
+    src: wetty_ssh_config
+    dest: /home/wetty/.ssh/config
+    owner: wetty
+    group: wetty
+    mode: 0644
+
+- name: Template wetty Service file
+  template:
+    src: "wetty.service.j2"
+    dest: "/lib/systemd/system/wetty.service"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable wetty Service
+  service:
+    name: "wetty.service"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Copy over pam configs
+  copy:
+    src: common-auth
+    dest: /etc/pam.d/common-auth
+    owner: root
+    group: root
+    mode: 0644
+
+- name: update pam sshd configs
+  lineinfile:
+    line: "session [success=ok default=bad] pam_python.so pam_session.py"
+    path: "/etc/pam.d/sshd"
+    state: present
+
+- name: Ensure /lib/security/ directory exists
+  file:
+    path: /lib/security/
+    state: directory
+    owner: root
+    group: root
+
+- name: Copy pam_auth.py to deployed location
+  copy:
+    src: pam_auth.py
+    dest: "/lib/security/pam_auth.py"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy pam_session.py to deployed location
+  copy:
+    src: pam_session.py
+    dest: "/lib/security/pam_session.py"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy sshkey_auth.py to deployed location
+  copy:
+    src: sshkey_auth.py
+    dest: "/lib/security/sshkey_auth.py"
+    owner: root
+    group: root
+    mode: 700
+
+- name: Disable user crontab with whitelist
+  copy:
+    content: ""
+    dest: /etc/cron.allow
+    force: no
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy over sshd configs
+  copy:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0644
+  register: sshd
+
+- name: Restart ssh service to pickup new configs
+  service:
+    name: sshd
+    state: restarted
+  when: sshd.changed
+
+- name: Copy over limits.conf
+  copy:
+    src: limits.conf
+    dest: /etc/security/limits.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy over sysctl.conf
+  copy:
+    src: sysctl.conf
+    dest: /etc/sysctl.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Reload sysctl
+  command: sysctl --system -p
+
+- name: Restart networking to ensure new limits
+  service:
+    name: systemd-networkd
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+
+- name: Copy over journald.conf
+  copy:
+    src: journald.conf
+    dest: /etc/systemd/journald.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Restart systemd-journald service to pickup new configs
+  service:
+    name: systemd-journald
+    state: restarted
+
+- name: Add competitiors group
+  group:
+    name: competitors
+    state: present
+
+- name: Copy over login.defs
+  copy:
+    src: login.defs
+    dest: /etc/login.defs
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Disable systemd.logind permenantly by masking
+  systemd:
+    name: systemd-logind.service
+    state: stopped
+    masked: yes
+
+# REJECT would be more helpful to anyone trying. So DROP it.
+- name: Add iptables rules and save them
+  block:
+    - name: Block outgoing SMTP
+      iptables:
+        chain: OUTPUT
+        destination_port: smtp
+        protocol: tcp
+        jump: DROP
+      register: block_smtp
+    - name: Save iptables rules
+      command: netfilter-persistent save
+      when: block_smtp is changed
+
+
+- name: Install tc-limit service
+  block:
+
+    - name: Add tc-limit.service
+      template:
+        src: tc-limit.service.j2
+        dest: "/etc/systemd/system/tc-limit.service"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Remove tc rules if they already exist, ignore error if they don't
+      command: "tc qdisc del dev {{ ansible_default_ipv4.interface }} handle 1: root htb default 11"
+      ignore_errors: True
+
+    - name: Ensure limit-tc is enabled and started
+      service:
+        name: tc-limit.service
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+  when: on_aws | default(False) | bool

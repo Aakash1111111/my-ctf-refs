@@ -1,0 +1,53 @@
+---
+# Configuration for use with the local development Vagrantfile
+# 
+# You should not need to edit this file. It's primary purpose is to provide
+# connection details for the web and shell hosts. As you can see the other
+# required configuration is minimal.
+
+all:
+
+  hosts:
+    shell:
+      hostname                    : "picoCTF-shell-dev"
+      ansible_host                : "{{ lookup('env','SIP') or '192.168.2.3' }}"        # from Vagrantfile
+      ansible_ssh_private_key_file: "../.vagrant/machines/shell/virtualbox/private_key" # vagrant created
+    web:
+      hostname                    : "picoCTF-web-dev"
+      ansible_host                : "{{ lookup('env','WIP') or '192.168.2.2' }}"        # from Vagrantfile
+      ansible_ssh_private_key_file: "../.vagrant/machines/web/virtualbox/private_key"   # vagrant created
+
+  vars:
+      # SSH admin keys (Optional)
+      admin_keys                  : []
+      # Disable Unattended Upgrades
+      disable_unattended_upgrades : False
+
+      # Web automation and Features (Optional)
+      auto_add_web_admin          : True
+      auto_add_shell              : True
+      auto_load_problems          : True
+      auto_start_ctf              : True
+      enable_docker               : True
+
+      # Default vagrant VM user
+      ansible_user                : "vagrant"
+
+      # Set whether `ansible_host` is an IP address or a domain name (DNS)
+      # In this development environment it is an IP address.
+      host_type                   : "IP"  # valid options 'IP' or 'DNS'
+
+      ###
+      # *** INSECURE development settings ***
+      # The following are known insecure options that are only suitable for a
+      # development environment. We call them out here so that you will know to
+      # change them if you ever intend to use this configuration for any other
+      # purpose.
+      ####
+      mongodb_conf_auth               : False
+      redis_conf_auth                 : False
+      flask_app_secret_key            : "INSECURE_DEFAULT_CHANGE_ME"
+      flask_app_rate_limit_bypass_key : "INSECURE_DEFAULT_CHANGE_ME"
+      shell_manager_deploy_secret     : "INSECURE_DEFAULT_CHANGE_ME"
+      web_admin_pw                    : "dev"                         # web_admin: "ctfadmin"
+      admin_email                     : "admin@example.com"           # will no be able to reset password

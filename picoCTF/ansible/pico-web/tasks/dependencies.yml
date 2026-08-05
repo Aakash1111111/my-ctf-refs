@@ -1,0 +1,60 @@
+---
+# Playbook that installs the dependencies for the picoCTF-web server
+
+# Extracted from picoCTF-platform/scripts/web_setup.sh
+- name: Install picoCTF platform system dependencies
+  apt:
+    name: [
+        'gunicorn',
+        'jekyll',
+        'libffi-dev',
+        'libssl-dev',
+        'python-virtualenv',
+        'python3-pip',
+        'python3.7-dev',
+        'python3.7-venv',
+        'python3.7',
+        ]
+    state: present
+    update_cache: yes
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Install pymongo in (new) virtualenv
+  pip:
+    name: pymongo
+    virtualenv: "{{ virtualenv_dir }}"
+    virtualenv_python: python3.7
+
+- name: Install python packages in virtualenv
+  pip:
+    name: [
+      'packaging',
+      'appdirs',
+      ]
+    virtualenv: "{{ virtualenv_dir }}"
+
+# Fix "Invalid environment marker: platform_python_implementation != 'PyPy'"
+- name: Upgrade setuptools
+  pip:
+    name: "setuptools"
+    virtualenv: "{{ virtualenv_dir }}"
+    extra_args: "--upgrade"
+
+# static website frontend build dependencies
+- include_role:
+    name: nodejs
+
+# Extracted from picoCTF-platform/scripts/web_setup.sh
+- name: Install bable npm packages (globally)
+  npm:
+    name: "{{ item }}"
+    global: yes
+    production: yes
+    state: present
+    version: "^7.0.0"
+  with_items:
+    - "@babel/core"
+    - "@babel/cli"
+    - "@babel/preset-env"
+    - "@babel/preset-react"

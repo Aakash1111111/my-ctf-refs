@@ -1,0 +1,29 @@
+---
+# Playbook that installs base utilities we would want on any server
+
+- name: Install base packages
+  apt:
+    state: present
+    pkg: [
+        'aptitude',         # required for apt module
+        'curl',
+        'git',
+        'python-passlib',   # required for htpasswd module
+        'tmux',
+        'vim-nox',
+        # monitoring tools
+        'htop',
+        'iftop',
+        'ncdu',
+        'nethogs',
+        'vnstat',
+        ]
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Disable unattended upgrades
+  apt:
+    state: absent
+    name: unattended-upgrades
+    purge: True
+  when: disable_unattended_upgrades | default(false) | bool

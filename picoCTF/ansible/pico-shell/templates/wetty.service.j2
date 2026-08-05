@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+
+[Unit]
+Description=wetty
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c '/usr/bin/node {{ wetty_js_path }} -p {{ wetty_port }} --base /shell/ --ssh-auth keyboard-interactive'
+User=wetty
+ProtectHome=read-only
+LimitNOFILE=65535
+LimitNPROC=65535
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,41 @@
+---
+# Configure docker daemon to securely listen on https per:
+# https://docs.docker.com/engine/security/https/
+
+- import_tasks: docker_install.yml
+
+- import_tasks: deps.yml
+
+- import_tasks: gen_server.yml
+
+- name: Change docker config to listen with TLS
+  lineinfile:
+    path: /lib/systemd/system/docker.service
+    regexp: '^ExecStart='
+    line: "ExecStart=/usr/bin/dockerd --tlsverify --tlscacert={{ca_crt}} --tlscert={{srv_crt}} --tlskey={{srv_key}} {{socket_host}} {{tcp_host}}"
+  register: modconfig
+
+- name: Reload and restart docker daemon
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: docker
+  when: modconfig.changed
+
+# generate a key/certificate for the local ansible_user
+- import_tasks: gen_client.yml
+  vars:
+    client: local
+- import_tasks: config_user.yml
+  vars:
+    client: local
+
+# support container pruning
+- import_tasks: cron_container_prune.yml
+
+- name: "Generate Docker Client Certs"
+  include_tasks: gen_client.yml
+  with_items: "{{ docker_clients }}"
+  loop_control:
+    loop_var: client
+  tags: ["docker", "docker-client"]

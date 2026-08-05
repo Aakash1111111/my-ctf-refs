@@ -1,0 +1,29 @@
+---
+layout: default
+title: "Challenge Problems"
+post_scripts:
+- js/problems.js
+- js/progression_graphs.js
+- /js/libs/Chart.min.js
+- js/libs/star-rating.min.js
+startup_functions:
+- redirectIfNotLoggedIn()
+---
+
+<link href="/css/star-rating.min.css" rel="stylesheet" type="text/css"/>
+
+<script type="text/template" id="achievement-message-template">
+    <table>
+        <tr>
+            <td>
+                <img src="<%= achievement.image %>"/>
+            </td>
+            <td>
+                <div><b><%= achievement.name %></b></div>
+                <p><%= achievement.description %></p>
+            </td>
+        </tr>
+    </table>
+</script>
+
+<div class="container" id="problem-root-holder"></div>

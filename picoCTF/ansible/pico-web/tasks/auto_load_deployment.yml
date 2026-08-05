@@ -1,0 +1,11 @@
+---
+# Task list to load problems into the web interface
+
+- name: "Autoload Challenges from Shell Server ({{ shell_name }})"
+  shell:
+    cmd: >
+      . {{virtualenv_dir}}/bin/activate;
+      {{ scripts_dir }}/load-deployment.py
+      -n {{ shell_name }}
+      --enable
+      --lock

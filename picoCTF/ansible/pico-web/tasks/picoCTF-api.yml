@@ -1,0 +1,10 @@
+---
+
+# source synced in common
+- name: Install picoCTF-web api from source
+  pip:
+    name: "file://{{ pico_web_api_dir }}"
+    virtualenv: "{{ virtualenv_dir }}"
+    extra_args: "--upgrade"
+  notify:
+    - restart gunicorn

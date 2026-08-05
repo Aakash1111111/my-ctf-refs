@@ -1,0 +1,40 @@
+---
+
+# In a remote environment such as AWS there are often more steps required to
+# bootstrap a system from scratch. For this reason we split the setup into two
+# separate playbooks. The tasks in this playbook should only need to be run
+# once in order to get all hosts to a common level (e.g. core dependencies
+# installed, accounts normalized, etc). The standard platform configuration
+# then occurs in the site.yml playbook.
+
+- hosts: all
+  become: yes
+  become_method: sudo
+  gather_facts: no          # can't gather facts until bootstraped
+  any_errors_fatal: true    # all hosts must be bootstraped to proceed
+  tasks:
+
+    # 1. Configure host to support ansible
+    - import_role:
+        name: common
+        tasks_from: bootstrap
+      vars:
+        ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+
+    # 2. Scan for remote SSH key and trust (local)
+    - import_role:
+        name: common
+        tasks_from: util_ssh_keyscan
+
+    # 3. Ensure remote user has appropriate keys and is configured
+    - import_role:
+        name: common
+        tasks_from: util_admin_user
+      vars:
+        admin: "{{ ansible_user }}"
+        keys: "{{ admin_keys }}"
+
+# Now that the remote environment is prepared. Run the standard picoCTF
+# platform installation.
+- name: Platform Provision
+  import_playbook: "site.yml"

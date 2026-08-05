@@ -1,0 +1,19 @@
+{
+  "name": "On-Demand",
+  "author": "Roy Ragsdale",
+  "description": "Locking bundle for the on-demand example challenges.",
+  "dependencies": {
+    "buffer-overflow-2-b45325f": {
+      "threshold": 1,
+      "weightmap": {
+        "key-delivery-service-412c367": 1
+      }
+    },
+    "key-delivery-service-412c367": {
+      "threshold": 1,
+      "weightmap": {
+        "docker-world-867a1ac": 1
+      }
+    }
+  }
+}

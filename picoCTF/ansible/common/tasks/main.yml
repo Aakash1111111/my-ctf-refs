@@ -1,0 +1,21 @@
+---
+# Playbook that runs tasks common across all servers
+
+- include: apt_upgrade.yml
+  tags:
+    - dependency
+
+- include: utils.yml
+  tags:
+    - dependency
+
+- include: set_hostname.yml
+
+- include: sync_source.yml
+  tags:
+    - sync
+    - web-api
+    - web-static
+    - shell-api
+    - deploy-all
+    - redeploy-one

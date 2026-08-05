@@ -1,0 +1,13 @@
+---
+
+- name: Request a certificate (nginx)
+  command: >
+    certbot certonly --nginx
+    --no-eff-email
+    --agree-tos 
+    -m {{certbot_email}}
+    -d {{certbot_domain}}
+    {% if certbot_staging %} --staging {% endif %}
+  register: certonly
+  args:
+    creates: "/etc/letsencrypt/live/{{certbot_domain}}/fullchain.pem"

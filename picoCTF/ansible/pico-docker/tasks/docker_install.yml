@@ -1,0 +1,30 @@
+---
+# Install Docker via distro repos
+# https://docs.docker.com/engine/installation/linux/docker-ce/debian/
+
+- name: Install docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Start docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Make docker group
+  group:
+    name: docker
+    state: present
+
+- name: Add "{{ansible_user}}" to docker group
+  user:
+    name: "{{ansible_user}}"
+    groups: docker
+    append: yes
+
+- name: Install docker-compose
+  apt:
+    name: docker-compose
+    state: present

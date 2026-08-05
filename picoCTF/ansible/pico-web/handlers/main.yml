@@ -1,0 +1,7 @@
+
+- name: restart gunicorn
+  service:
+    name: gunicorn.service
+    state: restarted
+    enabled: yes
+    daemon_reload: yes

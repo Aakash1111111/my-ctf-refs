@@ -1,0 +1,1 @@
+Transpiled JSX should be in this directory though the files should not be committed to the repository.

@@ -1,0 +1,26 @@
+---
+# Playbook that installs and configures picoCTF-web servers
+
+- include: dependencies.yml
+  tags: dependency
+
+- include_role:
+    name: nginx
+    apply:
+      tags:
+        - nginx
+  tags: nginx
+
+- include: picoCTF-config.yml
+
+- include: picoCTF-api.yml
+  tags: web-api
+
+- include: picoCTF-static.yml
+  tags: web-static
+
+- include: gunicorn.yml
+
+- include: daemons.yml
+
+- include: auto_configure.yml

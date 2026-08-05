@@ -1,0 +1,35 @@
+
+# Runs ssh-keyscan to add a host to SSH known host if if does not exist.
+# This is nessecary the first time after creating a new machine.
+
+
+# trottle to 1 to prevent race condition
+- name: Remove any prior ssh host key
+  become: false
+  local_action:
+    module: command ssh-keygen -R '{{ ansible_host }}'
+  throttle: 1
+
+- name: Get public ip via ifconfig.me
+  uri:
+    url: https://ifconfig.me/ip
+    return_content: yes
+  register: ip_response
+  when: host_type == "DNS"
+
+- name: Remove any prior ssh host key (by IP)
+  become: false
+  local_action:
+    module: command ssh-keygen -R '{{ ip_response.content }}'
+  throttle: 1
+  when: host_type == "DNS"
+
+# reference: https://gist.github.com/shirou/6928012
+- name: Ensure ssh host key known
+  become: false
+  local_action:
+    module: lineinfile
+    dest: ~/.ssh/known_hosts
+    create: yes
+    state: present
+    line: "{{ lookup('pipe', 'ssh-keyscan -trsa -H ' + ansible_host ) }}"

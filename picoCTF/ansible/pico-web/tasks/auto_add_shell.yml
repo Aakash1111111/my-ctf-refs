@@ -1,0 +1,15 @@
+---
+# Task list to add a shell server to the web
+
+- name: Autoload Shell Server into web interface
+  shell:
+    cmd: >
+      . {{virtualenv_dir}}/bin/activate;
+      {{ scripts_dir }}/add-shell-server.py
+      -n '{{ shell_name }}'
+      -u '{{ shell_user }}'
+      -k '{{ shell_keypath }}'
+      --host '{{ shell_host }}'
+      --proto '{{ shell_proto }}'
+  register: result
+  changed_when: '"WARN" not in result.stderr'

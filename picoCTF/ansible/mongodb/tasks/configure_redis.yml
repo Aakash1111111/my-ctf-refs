@@ -1,0 +1,14 @@
+---
+# Playbook that configures a running instance of redis
+-
+- name: Configure redis
+  template:
+    src: redis.conf.j2
+    dest: "/etc/redis/redis.conf"
+    backup: yes
+    owner: root
+    group: root
+    mode: 0644
+  notify :
+    - redis-server restart
+  when: not aws_elasticache

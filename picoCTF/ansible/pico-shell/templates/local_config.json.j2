@@ -1,0 +1,18 @@
+{
+    "hostname": "{{ ansible_host }}",
+{% if enable_shell_ssl  or enable_certbot | default(False) | bool -%}
+    "web_server": "{{ web_address_internal_https }}",
+{% else %}
+    "web_server": "{{ web_address_internal }}",
+{% endif %}
+    "rate_limit_bypass_key": "{{ flask_app_rate_limit_bypass_key }}"
+
+    {% if enable_docker %}
+    ,
+    "docker_host": "{{ docker_internal_host }}",
+    "docker_ca_cert": "{{ docker_ca }}",
+    "docker_client_cert": "{{ docker_client }}",
+    "docker_client_key": "{{ docker_key }}"
+    {% endif %}
+
+}

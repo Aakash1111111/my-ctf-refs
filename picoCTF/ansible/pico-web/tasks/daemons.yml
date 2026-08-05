@@ -1,0 +1,23 @@
+---
+# Playbook that installs and configures CTF daemons
+
+- name: Template ctf-stats.service
+  template:
+    src: ctf-stats.service.j2
+    dest: "/etc/systemd/system/ctf-stats.service"
+    owner: root
+    group: root
+
+- name: Template ctf-stats.timer
+  template:
+    src: ctf-stats.timer.j2
+    dest: "/etc/systemd/system/ctf-stats.timer"
+    owner: root
+    group: root
+
+- name: Ensure ctf-stats timer is enabled
+  systemd:
+    name: ctf-stats.timer
+    state: started
+    enabled: yes
+    daemon_reload: yes

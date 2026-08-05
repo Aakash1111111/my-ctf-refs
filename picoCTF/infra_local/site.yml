@@ -1,0 +1,24 @@
+---
+# Playbook to deploy the entire picoCTF environment.
+#
+# You should not need to edit this file.
+
+- hosts: shell
+  become: yes
+  become_method: sudo
+  pre_tasks:
+    - import_tasks: "./tasks/vagrant_shell_bootstrap.yml"
+  roles:
+    - {role: common     , tags: ["common"]}
+    - {role: pico-docker, tags: ["docker"], when: enable_docker}
+    - {role: pico-shell , tags: ["shell"]}
+
+- hosts: web
+  become: yes
+  become_method: sudo
+  pre_tasks:
+    - import_tasks: "./tasks/vagrant_web_bootstrap.yml"
+  roles:
+    - {role: common     , tags: ["common"]}
+    - {role: mongodb    , tags: ["db"]}
+    - {role: pico-web   , tags: ["web"]}

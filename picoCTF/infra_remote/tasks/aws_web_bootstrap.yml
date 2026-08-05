@@ -1,0 +1,12 @@
+---
+
+# A collection of tasks that are suitable to bootstrap a web host in a remote
+# AWS environment.
+
+# 1. Configure a docker client certificate
+- import_role:
+    name: pico-docker
+    tasks_from: config_user
+  vars:
+    client: "{{ ansible_host }}"
+  when: enable_docker

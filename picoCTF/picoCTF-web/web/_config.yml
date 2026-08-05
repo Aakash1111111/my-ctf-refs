@@ -1,0 +1,11 @@
+# Site settings
+title: CTF
+
+destination: /srv/http/ctf
+exclude: ['jsx', 'node_modules', 'package.json', 'package-lock.json']
+
+mode: development
+
+# Build settings
+markdown: kramdown
+permalink: none

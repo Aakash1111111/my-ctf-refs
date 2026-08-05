@@ -1,0 +1,75 @@
+# {{ ansible_managed }}
+
+server {
+    server_name {{ nginx_server_name }};
+    root   /usr/share/nginx/html;
+{% if enable_shell_ssl | bool -%}
+    listen       443 ssl;
+
+    ssl_certificate  /etc/ssl/certs/{{ ssl_crt }};
+    ssl_certificate_key /etc/ssl/private/{{ ssl_key }};
+    ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+{% elif enable_certbot | bool -%}
+        listen 443 ssl; # managed by Certbot
+
+        ssl_certificate /etc/letsencrypt/live/{{nginx_server_name}}/fullchain.pem; # managed by Certbot
+        ssl_certificate_key /etc/letsencrypt/live/{{nginx_server_name}}/privkey.pem; # managed by Certbot
+        include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+        ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+{% else %}
+    listen       80;
+{% endif %}
+
+    server_tokens off;
+    more_clear_headers Strict-Transport-Security;
+    add_header Strict-Transport-Security 'max-age=0';
+
+    location /shell {
+        proxy_pass http://127.0.0.1:{{ wetty_port }}/shell;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 43200000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_hide_header X-Frame-Options;
+    }
+
+    location / {
+        {% if (enable_shell_proxy|bool) -%}
+        if ($http_referer ~* //{{ nginx_server_name }}/problem/(\d+)/? ) {
+            set $port $1;
+            return 307 $scheme://{{ nginx_server_name }}/problem/$port$request_uri;
+        }
+{% endif %}
+        types        { }
+        default_type application/octet-stream;
+    }
+
+    {% if (enable_shell_proxy|bool) -%}
+    location ~ /problem/(\d+)$ {
+        return 301 $scheme://{{ nginx_server_name }}/problem/$1/;
+    }
+    location ~ /problem/(\d+)/?(.*) {
+        set $port $1;
+        set $path $2;
+        proxy_pass http://127.0.0.1:$port/$path$is_args$args;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Scheme $scheme;
+        proxy_redirect http:// $scheme://;
+    }
+{% endif %}
+}
+
+{% if (enable_shell_ssl | bool) or (enable_certbot |bool ) -%}
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name {{ nginx_server_name }};
+        return 301 https://$server_name$request_uri;
+}
+{% endif %}
