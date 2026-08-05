@@ -1,0 +1,6 @@
+
+*
+!*.tar.gz.aes256
+!tarcrypt.py
+!README.md
+!.gitignore
